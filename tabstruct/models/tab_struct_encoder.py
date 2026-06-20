@@ -179,7 +179,6 @@ class TabStructEncoder(BartPreTrainedModel):
                         token_type,
                     )
                 else:
-                    layer_attn_mask = attention_mask
                     layer_outputs = encoder_layer(
                         hidden_states,
                         layer_attn_mask,
