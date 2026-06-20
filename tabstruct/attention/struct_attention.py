@@ -131,9 +131,9 @@ class StructAttention(nn.Module):
 
         if attention_mask is not None:
             
-            if attention_mask.size() != (bsz, 1, tgt_len, src_len):
+            if attention_mask.size() not in [(bsz, 1, tgt_len, src_len), (bsz, self.num_heads, tgt_len, src_len)]:
                 raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
+                    f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)} or {(bsz, self.num_heads, tgt_len, src_len)}, but is {attention_mask.size()}"
                 )
             
 
