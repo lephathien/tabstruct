@@ -57,7 +57,7 @@ class TabStructEncoder(BartPreTrainedModel):
 
         #### Modif :
 
-        self._use_sparse_mask = True if config.mask_number != 0 else False
+        self._use_sparse_mask = True if config.mask_number != 0 or getattr(config, 'learnable_mask', False) else False
         self.mask_number = config.mask_number
 
         self.embed_positions = EmbeddingController(
@@ -72,8 +72,8 @@ class TabStructEncoder(BartPreTrainedModel):
         if getattr(config, 'learnable_mask', False):
             self.mask_predictor = LearnableMaskPredictor(
                 hidden_dim=64,
-                num_heads=config.encoder_attention_heads,
                 d_model=config.d_model,
+                num_layers=config.encoder_layers,
             )
 
         # Initialize weights and apply final processing
@@ -128,19 +128,11 @@ class TabStructEncoder(BartPreTrainedModel):
         # expand attention_mask
         if attention_mask is not None:
 
-   
             if self._use_sparse_mask:
                 if getattr(self.config, 'learnable_mask', False):
-                    mask_prob, _, diversity_loss = self.mask_predictor(token_type, hidden_states)
-                    self.last_diversity_loss = diversity_loss
                     attn_padding = (attention_mask == 1).unsqueeze(1).unsqueeze(2).float()
-                    mask_hard = (mask_prob > 0.5).float()
-                    mask = (mask_hard - mask_prob).detach() + mask_prob
-                    mask = mask * attn_padding
-                    attention_mask = (1.0 - mask) * -10000.0
                 else:
                     attention_mask = generate_mask(token_type, attention_mask, self.mask_number).unsqueeze(1)
-
             else:
                 attention_mask = _prepare_4d_attention_mask(attention_mask, inputs_embeds.dtype)
 
@@ -152,7 +144,7 @@ class TabStructEncoder(BartPreTrainedModel):
         if head_mask is not None:
             if head_mask.size()[0] != (len(self.layers)):
                 raise ValueError(
-                    f"The head_mask should be specified for {len(self.layers)} layers, but it is for"
+                    f"The head_mask should be specified for {len(self.layers)} layers, but it is"
                     f" {head_mask.size()[0]}."
                 )
 
@@ -170,19 +162,27 @@ class TabStructEncoder(BartPreTrainedModel):
             if to_drop:
                 layer_outputs = (None, None)
             else:
+                if getattr(self.config, 'learnable_mask', False):
+                    mask_prob = self.mask_predictor(token_type, hidden_states, layer_idx=idx)
+                    mask = mask_prob * attn_padding
+                    layer_attn_mask = (1.0 - mask) * -10000.0
+                else:
+                    layer_attn_mask = attention_mask
+
                 if self.gradient_checkpointing and self.training:
                     layer_outputs = self._gradient_checkpointing_func(
                         encoder_layer.__call__,
                         hidden_states,
-                        attention_mask,
+                        layer_attn_mask,
                         (head_mask[idx] if head_mask is not None else None),
                         output_attentions,
                         token_type,
                     )
                 else:
+                    layer_attn_mask = attention_mask
                     layer_outputs = encoder_layer(
                         hidden_states,
-                        attention_mask,
+                        layer_attn_mask,
                         layer_head_mask=(head_mask[idx] if head_mask is not None else None),
                         output_attentions=output_attentions,
                         token_type=token_type,

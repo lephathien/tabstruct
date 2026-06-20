@@ -126,10 +126,7 @@ class TabStructForConditionalGeneration(BartPreTrainedModel):
         
             masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 
-            diversity_loss = getattr(self.model.encoder, 'last_diversity_loss', None)
-            if diversity_loss is not None:
-                lambda_val = getattr(self.config, 'diversity_lambda', 0.01)
-                masked_lm_loss = masked_lm_loss + diversity_loss * lambda_val
+
 
         if not return_dict:
             output = (lm_logits,) + outputs[1:]

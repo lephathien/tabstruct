@@ -85,7 +85,7 @@ class ModelArguments:
     )
 
     diversity_lambda: float = field(
-        default=1.0,
+        default=0.0,
         metadata={"help": "Weight for multi-head diversity loss (0 to disable)."}
     )
 

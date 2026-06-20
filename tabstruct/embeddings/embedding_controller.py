@@ -2,7 +2,7 @@
 
 from tabstruct.embeddings.CPE import CellsPositionalEmbedding
 from tabstruct.embeddings.TPE import TablePositionalEmbedding
-from tabstruct.embeddings.E1 import RowColumnEmbeddings
+from tabstruct.embeddings.E1 import GatedRowColumnEmbeddings as RowColumnEmbeddings
 from tabstruct.embeddings.segment_embedding import SegmentEmbedding
 
 import torch.nn as nn
