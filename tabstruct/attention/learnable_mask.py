@@ -20,7 +20,7 @@ class LearnableMaskPredictor(nn.Module):
             nn.Linear(hidden_dim, num_heads),
         )
         self.gate = nn.Parameter(torch.tensor(1.0))
-        nn.init.constant_(self.scorer[-1].bias, -5.0)
+        nn.init.constant_(self.scorer[-1].bias, 5.0)
 
     def forward(self, token_type, hidden_states=None):
         B, L = token_type.shape[0], token_type.shape[1]
