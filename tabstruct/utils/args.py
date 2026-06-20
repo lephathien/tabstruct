@@ -175,6 +175,16 @@ class DataTrainingArguments:
         },
     )
 
+    max_train_samples: Optional[int] = field(
+        default=None,
+        metadata={"help": "Limit number of training samples for debugging."}
+    )
+
+    max_eval_samples: Optional[int] = field(
+        default=None,
+        metadata={"help": "Limit number of eval samples for debugging."}
+    )
+
 
 
 def __post_init__(self):

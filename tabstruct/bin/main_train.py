@@ -35,6 +35,11 @@ def main_train(model_args, data_args, training_args):
 
     show_example(datasets, "train", logger)
 
+    if data_args.max_train_samples is not None:
+        datasets["train"] = datasets["train"].select(range(data_args.max_train_samples))
+    if data_args.max_eval_samples is not None:
+        datasets["validation"] = datasets["validation"].select(range(data_args.max_eval_samples))
+
     train_dataset, eval_dataset, predict_dataset = preprocess_datasets(datasets, tokenizer, data_args, model_args, training_args, logger)
   
     data_collator = DataCollatorForSeq2Seq(
