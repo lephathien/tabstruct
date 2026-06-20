@@ -55,7 +55,7 @@ class LearnableMaskPredictor(nn.Module):
         scores = scores.permute(0, 3, 1, 2)
 
         if self.training:
-            noise = -torch.log(-torch.log(torch.rand_like(scores) + 1e-8) + 1e-8)
+            noise = -torch.log(-torch.log(torch.rand_like(scores) + 1e-4) + 1e-4)
             gumbel = (scores + noise) / self.gate
         else:
             gumbel = scores / self.gate
