@@ -1,0 +1,1 @@
+from tabstruct.attention.learnable_mask import LearnableMaskPredictor

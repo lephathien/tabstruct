@@ -79,6 +79,16 @@ class ModelArguments:
         default="google/tapas-base",
     )
 
+    learnable_mask: bool = field(
+        default=False,
+        metadata={"help": "Use learnable sparse mask instead of predefined M0-M6."}
+    )
+
+    diversity_lambda: float = field(
+        default=0.01,
+        metadata={"help": "Weight for multi-head diversity loss (0 to disable)."}
+    )
+
 @dataclass
 class DataTrainingArguments:
     """

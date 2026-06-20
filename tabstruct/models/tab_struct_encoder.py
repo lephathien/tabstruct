@@ -20,6 +20,7 @@ from transformers.models.bart.modeling_bart import (
 # Imports spécifiques au projet
 from tabstruct.embeddings.embedding_controller import EmbeddingController
 from tabstruct.attention.masking_utils import generate_mask
+from tabstruct.attention.learnable_mask import LearnableMaskPredictor
 from tabstruct.models.tab_struct_encoder_layer import TabStructEncoderLayer
 
 
@@ -67,6 +68,14 @@ class TabStructEncoder(BartPreTrainedModel):
         self.layernorm_embedding = nn.LayerNorm(embed_dim)
 
         self.gradient_checkpointing = False
+
+        if getattr(config, 'learnable_mask', False):
+            self.mask_predictor = LearnableMaskPredictor(
+                hidden_dim=64,
+                num_heads=config.encoder_attention_heads,
+                d_model=config.d_model,
+            )
+
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -121,7 +130,16 @@ class TabStructEncoder(BartPreTrainedModel):
 
    
             if self._use_sparse_mask:
-                attention_mask = generate_mask(token_type, attention_mask, self.mask_number).unsqueeze(1)
+                if getattr(self.config, 'learnable_mask', False):
+                    mask_prob, _, diversity_loss = self.mask_predictor(token_type, hidden_states)
+                    self.last_diversity_loss = diversity_loss
+                    attn_padding = (attention_mask == 1).unsqueeze(1).unsqueeze(2).float()
+                    mask_hard = (mask_prob > 0.5).float()
+                    mask = (mask_hard - mask_prob).detach() + mask_prob
+                    mask = mask * attn_padding
+                    attention_mask = (1.0 - mask) * torch.finfo(mask.dtype).min
+                else:
+                    attention_mask = generate_mask(token_type, attention_mask, self.mask_number).unsqueeze(1)
 
             else:
                 attention_mask = _prepare_4d_attention_mask(attention_mask, inputs_embeds.dtype)

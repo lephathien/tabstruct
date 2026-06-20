@@ -35,6 +35,8 @@ def load_config(data_args, model_args, logger ):
     config.positional_embedding = model_args.positional_embedding
     config.mask_number = int(model_args.mask_sparsity_level[-1])
     config.input_token_structure = model_args.input_token_structure
+    config.learnable_mask = model_args.learnable_mask
+    config.diversity_lambda = model_args.diversity_lambda
 
 
     config._attn_implementation = "sdpa" # To use StructAttention

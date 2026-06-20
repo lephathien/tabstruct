@@ -7,10 +7,13 @@ BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 echo "BASE_DIR: $BASE_DIR"
 
 
-mapfile -t all_models < $BASE_DIR/all_models.txt
+all_models=()
+while IFS= read -r line; do
+    all_models+=("$line")
+done < "$BASE_DIR/all_models.txt"
 # Define a function to generate job.sh files
 generate_job() {
-  cat <<EOF > $BASE_DIR/jobs/test/$name/wikisql.sh
+  cat <<EOF > "$BASE_DIR/jobs/test/$name/wikisql.sh"
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --job-name=wsbab$index
@@ -42,7 +45,7 @@ EOF
 index=0
 for name in "${all_models[@]}"; do
   
-  mkdir -p $BASE_DIR/jobs/test/$name/results
+  mkdir -p "$BASE_DIR/jobs/test/$name/results"
   echo "wikisql job for: $name count: $index"
   generate_job $task $name $index
 
