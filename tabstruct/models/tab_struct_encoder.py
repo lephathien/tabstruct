@@ -137,7 +137,7 @@ class TabStructEncoder(BartPreTrainedModel):
                     mask_hard = (mask_prob > 0.5).float()
                     mask = (mask_hard - mask_prob).detach() + mask_prob
                     mask = mask * attn_padding
-                    attention_mask = (1.0 - mask) * torch.finfo(mask.dtype).min
+                    attention_mask = (1.0 - mask) * -10000.0
                 else:
                     attention_mask = generate_mask(token_type, attention_mask, self.mask_number).unsqueeze(1)
 
