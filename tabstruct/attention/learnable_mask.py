@@ -10,7 +10,7 @@ class LearnableMaskPredictor(nn.Module):
         self.seg_embed = nn.Embedding(2, hidden_dim)
         self.hidden_proj = nn.Linear(d_model, hidden_dim)
 
-        feat_dim = hidden_dim * 3
+        feat_dim = hidden_dim * 4
         self.token_mlp = nn.Sequential(
             nn.Linear(feat_dim, hidden_dim),
             nn.ReLU(),
@@ -37,6 +37,8 @@ class LearnableMaskPredictor(nn.Module):
         if hidden_states is not None:
             h_proj = self.hidden_proj(hidden_states)
             tok_feat = torch.cat([tok_feat, h_proj], dim=-1)
+        else:
+            tok_feat = torch.cat([tok_feat, tok_feat.new_zeros(B, L, self.hidden_proj.out_features)], dim=-1)
 
         scores = self.token_mlp(tok_feat).squeeze(-1)
         layer_emb = self.layer_embed(torch.tensor(layer_idx, device=scores.device))
